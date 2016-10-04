@@ -65,10 +65,11 @@ void readClauses( ){
             clauses[i].push_back(lit);
             //afegir info de les clausules on es cada variable
             //depenent de si es positiva o negativa
-            if(lit<0){
+            if(lit<0)
                 negatius[-lit].push_back(i);
-                else{
-                    positius[lit].push_back(i);
+                
+            else
+                positius[lit].push_back(i);
         }    
     } 
 }
