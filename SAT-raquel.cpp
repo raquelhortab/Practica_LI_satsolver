@@ -24,8 +24,9 @@ vector<vector<uint> > negatius; //clausules on apareix negatiu
 
 
 //first= positiu second=negatiu
-vector<pair<int,int> > prior;
+vector<pair<uint,uint> > prior;
 
+//vector<int> conflictius;
 
 int start_s;
 int stop_s;
@@ -46,7 +47,7 @@ void readClauses( ){
     positius.resize(numVars+1); //la posició 0 és inútil
     negatius.resize(numVars+1); //la posició 0 és inútil
     prior.resize(numVars+1);
-    
+    //conflictius.resize(numVars+1);
     // Read clauses
     for (uint i = 0; i < numClauses; ++i) {
         int lit;
@@ -54,10 +55,10 @@ void readClauses( ){
             clauses[i].push_back(lit);
             //afegir info de les clausules on es cada variable
             //depenent de si es positiva o negativa
-            if(lit<0){
-                negatius[-lit].push_back(i); ++prior[-lit].second;}
-            else{
-                positius[lit].push_back(i); ++prior[lit].first;}
+            if(lit<0)
+                negatius[-lit].push_back(i); 
+            else
+                positius[lit].push_back(i);
         }    
     } 
 }
@@ -99,7 +100,7 @@ bool propagateGivesConflict ( ) {
                 }
                 if (not someLitTrue and numUndefs == 0){
                     //prior[ultim].second = prior[ultim].second + 1;
-           
+                    //conflictius[ultim];
                     return true;} // conflict! all lits false
                 else if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);	
             }
@@ -153,16 +154,16 @@ int getNextDecisionLiteral(){
     int lit = 0;
     
     
-    for (uint i = 0; i < prior.size(); ++i){
+    for (uint i = 0; i < model.size(); ++i){
         if (i!=0 and model[i] == UNDEF){
-            int t = prior[i].second + prior[i].first;
+            int t = negatius[i].size()+positius[i].size();
             if(t>max){
                 max = t;
                 lit = i;
             }
         }
     }
-    if((prior[lit].first) > (prior[max].second)){
+    if((positius[lit].size()) > (negatius[lit].size())){
         return lit; //si esta mes cops positiva
     }
     else{
