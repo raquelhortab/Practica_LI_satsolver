@@ -23,10 +23,7 @@ vector<vector<uint> > positius; //clausules on apareix positiu
 vector<vector<uint> > negatius; //clausules on apareix negatiu
 
 
-//first= positiu second=negatiu
-vector<pair<uint,uint> > prior;
 
-//vector<int> conflictius;
 
 int start_s;
 int stop_s;
@@ -44,10 +41,12 @@ void readClauses( ){
     string aux;
     cin >> aux >> numVars >> numClauses;
     clauses.resize(numClauses); 
+    
     positius.resize(numVars+1); //la posició 0 és inútil
     negatius.resize(numVars+1); //la posició 0 és inútil
-    prior.resize(numVars+1);
-    //conflictius.resize(numVars+1);
+
+    
+    
     // Read clauses
     for (uint i = 0; i < numClauses; ++i) {
         int lit;
@@ -55,11 +54,9 @@ void readClauses( ){
             clauses[i].push_back(lit);
             //afegir info de les clausules on es cada variable
             //depenent de si es positiva o negativa
-            if(lit<0)
-                negatius[-lit].push_back(i); 
-            else
-                positius[lit].push_back(i);
-        }    
+            if(lit<0)   negatius[-lit].push_back(i);
+            else    positius[lit].push_back(i);
+        }  
     } 
 }
 
@@ -99,8 +96,8 @@ bool propagateGivesConflict ( ) {
                         ++numUndefs; lastLitUndef = clauses[cl][k]; }
                 }
                 if (not someLitTrue and numUndefs == 0){
-                    //prior[ultim].second = prior[ultim].second + 1;
-                    //conflictius[ultim];
+
+           
                     return true;} // conflict! all lits false
                 else if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);	
             }
@@ -118,8 +115,7 @@ bool propagateGivesConflict ( ) {
                         ++numUndefs; lastLitUndef = clauses[cl][k]; }
                 }
                 if (not someLitTrue and numUndefs == 0){
-                    //prior[-ultim].first = prior[-ultim].first + 1;
-                    
+
                     return true;} // conflict! all lits false
                 else if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);	
             }
@@ -153,24 +149,16 @@ int getNextDecisionLiteral(){
     int max = 0;
     int lit = 0;
     
-    
     for (uint i = 0; i < model.size(); ++i){
         if (i!=0 and model[i] == UNDEF){
-            int t = negatius[i].size()+positius[i].size();
-            if(t>max){
-                max = t;
-                lit = i;
-            }
+            int t = positius[i].size() + negatius[i].size();
+            if(t>max){  max = t;    lit = i;    }
         }
     }
-    if((positius[lit].size()) > (negatius[lit].size())){
-        return lit; //si esta mes cops positiva
-    }
-    else{
-        return -lit; //si esta mes cops negativa
-                
-    }
-        return 0; // reurns 0 when all literals are defined
+    
+    if( positius[lit].size()  > negatius[lit].size()) return lit; //si esta mes cops positiva
+    else    return -lit; //si esta mes cops negativa
+    return 0; // reurns 0 when all literals are defined
 }
 
 void checkmodel(){
@@ -198,7 +186,6 @@ int main(){
     model.resize(numVars+1,UNDEF);
     indexOfNextLitToPropagate = 0;  
     decisionLevel = 0;
-    
     
     
     // Take care of initial unit clauses, if any
