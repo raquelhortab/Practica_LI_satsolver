@@ -45,15 +45,11 @@ void readClauses( ){
     positius.resize(numVars+1); //la posició 0 és inútil
     negatius.resize(numVars+1); //la posició 0 és inútil
 
-    
-    
     // Read clauses
     for (uint i = 0; i < numClauses; ++i) {
         int lit;
         while (cin >> lit and lit != 0){
             clauses[i].push_back(lit);
-            //afegir info de les clausules on es cada variable
-            //depenent de si es positiva o negativa
             if(lit<0)   negatius[-lit].push_back(i);
             else    positius[lit].push_back(i);
         }  
@@ -69,7 +65,6 @@ int currentValueInModel(int lit){
         else return 1 - model[-lit];
     }
 }
-
 
 void setLiteralToTrue(int lit){
     modelStack.push_back(lit);
@@ -87,17 +82,14 @@ bool propagateGivesConflict ( ) {
             for (uint i = 0; i < negatius[ultim].size(); ++i) {
                 int cl = negatius[ultim][i];
                 bool someLitTrue = false;
-                int numUndefs = 0;
-                int lastLitUndef = 0;
+                int numUndefs = lastLitUndef = 0;
+                
                 for (uint k = 0; not someLitTrue and k < clauses[cl].size(); ++k){
                     int val = currentValueInModel(clauses[cl][k]);
                     if (val == TRUE) someLitTrue = true;
-                    else if (val == UNDEF){ 
-                        ++numUndefs; lastLitUndef = clauses[cl][k]; }
+                    else if (val == UNDEF){     ++numUndefs;    lastLitUndef = clauses[cl][k]; }
                 }
                 if (not someLitTrue and numUndefs == 0){
-
-           
                     return true;} // conflict! all lits false
                 else if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);	
             }
@@ -106,13 +98,11 @@ bool propagateGivesConflict ( ) {
             for (uint i = 0; i < positius[-ultim].size(); ++i) {
                 int cl = positius[-ultim][i];
                 bool someLitTrue = false;
-                int numUndefs = 0;
-                int lastLitUndef = 0;
+                int numUndefs = lastLitUndef = 0;
                 for (uint k = 0; not someLitTrue and k < clauses[cl].size(); ++k){
                     int val = currentValueInModel(clauses[cl][k]);
                     if (val == TRUE) someLitTrue = true;
-                    else if (val == UNDEF){ 
-                        ++numUndefs; lastLitUndef = clauses[cl][k]; }
+                    else if (val == UNDEF){     ++numUndefs;    lastLitUndef = clauses[cl][k]; }
                 }
                 if (not someLitTrue and numUndefs == 0){
 
