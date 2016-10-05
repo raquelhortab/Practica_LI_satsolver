@@ -115,7 +115,7 @@ bool propagateGivesConflict ( ) {
                         ++numUndefs; lastLitUndef = clauses[cl][k]; }
                 }
                 if (not someLitTrue and numUndefs == 0){
-                     prior[ultim].first = prior[ultim].first + 30;
+                     prior[-ultim].first = prior[-ultim].first + 30;
                     return true;} // conflict! all lits false
                 else if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);	
             }
@@ -156,7 +156,7 @@ int getNextDecisionLiteral(){
             }
         }
     }
-    if((prior[lit].first) > (prior[max].second)){
+    if((prior[lit].first) > (prior[lit].second)){
         return lit; //si esta mes cops positiva
     }
     else{
