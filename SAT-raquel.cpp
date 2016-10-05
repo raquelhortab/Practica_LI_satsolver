@@ -26,6 +26,7 @@ vector<vector<uint> > negatius; //clausules on apareix negatiu
 //first= positiu second=negatiu
 vector<pair<int,int> > prior;
 
+
 int start_s;
 int stop_s;
 
@@ -97,7 +98,8 @@ bool propagateGivesConflict ( ) {
                         ++numUndefs; lastLitUndef = clauses[cl][k]; }
                 }
                 if (not someLitTrue and numUndefs == 0){
-                    prior[ultim].second = prior[ultim].second + 30;
+                    //prior[ultim].second = prior[ultim].second + 1;
+           
                     return true;} // conflict! all lits false
                 else if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);	
             }
@@ -115,13 +117,15 @@ bool propagateGivesConflict ( ) {
                         ++numUndefs; lastLitUndef = clauses[cl][k]; }
                 }
                 if (not someLitTrue and numUndefs == 0){
-                     prior[-ultim].first = prior[-ultim].first + 30;
+                    //prior[-ultim].first = prior[-ultim].first + 1;
+                    
                     return true;} // conflict! all lits false
                 else if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);	
             }
         }
         ++indexOfNextLitToPropagate;
     }
+    
     return false;
 }
 
@@ -147,6 +151,8 @@ void backtrack(){
 int getNextDecisionLiteral(){
     int max = 0;
     int lit = 0;
+    
+    
     for (uint i = 0; i < prior.size(); ++i){
         if (i!=0 and model[i] == UNDEF){
             int t = prior[i].second + prior[i].first;
@@ -156,7 +162,7 @@ int getNextDecisionLiteral(){
             }
         }
     }
-    if((prior[lit].first) > (prior[lit].second)){
+    if((prior[lit].first) > (prior[max].second)){
         return lit; //si esta mes cops positiva
     }
     else{
