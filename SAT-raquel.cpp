@@ -19,27 +19,17 @@ vector<int> modelStack;
 uint indexOfNextLitToPropagate;
 uint decisionLevel;
 
-vector<vector<int> > positius; //clausules on apareix positiu
-vector<vector<int> > negatius; //clausules on apareix negatiu
+vector<vector<uint> > positius; //clausules on apareix positiu
+vector<vector<uint> > negatius; //clausules on apareix negatiu
 
-vector<bool> csat; //true=clausula satisfeta, false=no// us temporal
-vector<int> desfer;
 
-vector<int> freq;
+//first= positiu second=negatiu
+vector<pair<int,int> > prior;
 
 int start_s;
 int stop_s;
 
-bool comp1(int a, int b){
-    return( (positius[a].size()+negatius[a].size()) > (positius[b].size() + negatius[b].size()) );
-}
 
-void omplir_freq(int s){
-    freq.resize(s+1);
-    for(int i = 0; i <= s; ++i){
-        freq[i] = i;
-    }
-}
 
 void readClauses( ){
     // Skip comments
@@ -54,9 +44,7 @@ void readClauses( ){
     clauses.resize(numClauses); 
     positius.resize(numVars+1); //la posició 0 és inútil
     negatius.resize(numVars+1); //la posició 0 és inútil
-    
-    
-    csat.resize(numClauses+1,false);
+    prior.resize(numVars+1);
     
     // Read clauses
     for (uint i = 0; i < numClauses; ++i) {
@@ -65,11 +53,10 @@ void readClauses( ){
             clauses[i].push_back(lit);
             //afegir info de les clausules on es cada variable
             //depenent de si es positiva o negativa
-            if(lit<0)
-                negatius[-lit].push_back(i);
-                
-            else
-                positius[lit].push_back(i);
+            if(lit<0){
+                negatius[-lit].push_back(i); ++prior[-lit].second;}
+            else{
+                positius[lit].push_back(i); ++prior[lit].first;}
         }    
     } 
 }
@@ -100,47 +87,37 @@ bool propagateGivesConflict ( ) {
         if(ultim>0){ //si es positiu
             for (uint i = 0; i < negatius[ultim].size(); ++i) {
                 int cl = negatius[ultim][i];
-                if(not csat[cl]){
-                    bool someLitTrue = false;
-                    int numUndefs = 0;
-                    int lastLitUndef = 0;
-                    for (uint k = 0; not someLitTrue and k < clauses[cl].size(); ++k){
-                        int val = currentValueInModel(clauses[cl][k]);
-                        if (val == TRUE){
-                            someLitTrue = true;
-                            //vector temporal de clausules satisfetes
-                            csat[cl] = true;
-                            desfer.push_back(cl);
-                        }
-                        else if (val == UNDEF){ 
-                            ++numUndefs; lastLitUndef = clauses[cl][k]; }
-                    }
-                    if (not someLitTrue and numUndefs == 0) return true; // conflict! all lits false
-                    else if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);	
+                bool someLitTrue = false;
+                int numUndefs = 0;
+                int lastLitUndef = 0;
+                for (uint k = 0; not someLitTrue and k < clauses[cl].size(); ++k){
+                    int val = currentValueInModel(clauses[cl][k]);
+                    if (val == TRUE) someLitTrue = true;
+                    else if (val == UNDEF){ 
+                        ++numUndefs; lastLitUndef = clauses[cl][k]; }
                 }
+                if (not someLitTrue and numUndefs == 0){
+                    prior[ultim].second = prior[ultim].second + 30;
+                    return true;} // conflict! all lits false
+                else if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);	
             }
         }
         else{ //si es negatiu
             for (uint i = 0; i < positius[-ultim].size(); ++i) {
                 int cl = positius[-ultim][i];
-                if(not csat[cl]){
-                    bool someLitTrue = false;
-                    int numUndefs = 0;
-                    int lastLitUndef = 0;
-                    for (uint k = 0; not someLitTrue and k < clauses[cl].size(); ++k){
-                        int val = currentValueInModel(clauses[cl][k]);
-                        if (val == TRUE){
-                            //vector temporal de clausules satisfetes
-                            csat[cl] = true;
-                            desfer.push_back(cl);
-                            someLitTrue = true;
-                        }
-                        else if (val == UNDEF){ 
-                            ++numUndefs; lastLitUndef = clauses[cl][k]; }
-                    }
-                    if (not someLitTrue and numUndefs == 0) return true; // conflict! all lits false
-                    else if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);	
+                bool someLitTrue = false;
+                int numUndefs = 0;
+                int lastLitUndef = 0;
+                for (uint k = 0; not someLitTrue and k < clauses[cl].size(); ++k){
+                    int val = currentValueInModel(clauses[cl][k]);
+                    if (val == TRUE) someLitTrue = true;
+                    else if (val == UNDEF){ 
+                        ++numUndefs; lastLitUndef = clauses[cl][k]; }
                 }
+                if (not someLitTrue and numUndefs == 0){
+                     prior[ultim].first = prior[ultim].first + 30;
+                    return true;} // conflict! all lits false
+                else if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);	
             }
         }
         ++indexOfNextLitToPropagate;
@@ -163,27 +140,28 @@ void backtrack(){
     --decisionLevel;
     indexOfNextLitToPropagate = modelStack.size();
     setLiteralToTrue(-lit);  // reverse last decision
-    for(int i = 0; i < desfer.size(); ++i){
-        csat[desfer[i]] = false;
-    }
-    desfer.clear();
 }
 
 
 // Heuristic for finding the next decision literal:
 int getNextDecisionLiteral(){
-    for (uint i = 0; i < freq.size(); ++i){
-        // stupid heuristic:
+    int max = 0;
+    int lit = 0;
+    for (uint i = 0; i < prior.size(); ++i){
         if (i!=0 and model[i] == UNDEF){
-            if(positius[i].size() > negatius[i].size()){
-                return i; //si esta mes cops positiva
+            int t = prior[i].second + prior[i].first;
+            if(t>max){
+                max = t;
+                lit = i;
             }
-            else{
-                return -i; //si esta mes cops negativa
-                
-            }
-            
         }
+    }
+    if((prior[lit].first) > (prior[max].second)){
+        return lit; //si esta mes cops positiva
+    }
+    else{
+        return -lit; //si esta mes cops negativa
+                
     }
         return 0; // reurns 0 when all literals are defined
 }
@@ -214,8 +192,7 @@ int main(){
     indexOfNextLitToPropagate = 0;  
     decisionLevel = 0;
     
-    omplir_freq(numVars);
-    sort(freq.begin(),freq.end(),comp1);
+    
     
     // Take care of initial unit clauses, if any
     for (uint i = 0; i < numClauses; ++i)
