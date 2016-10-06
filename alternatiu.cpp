@@ -34,7 +34,6 @@ void conflictes_max(int lit){
         conflictes=0;
         for(int i = 1; i <= numVars; ++i){
             conflictes_tots[i] = 0;
-            //conflictes_neg[i] = 0;
         }
     }
     conflictes_tots[abs(lit)]+=positius[abs(lit)].size()+negatius[abs(lit)].size();
