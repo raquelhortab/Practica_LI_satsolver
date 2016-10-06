@@ -33,9 +33,13 @@ int stop_s;
 void conflictes_max(int lit){
     if(30000<=conflictes){
         conflictes=0;
+        for(int i = 1; i <= numVars; ++i){
+            conflictes_pos[i] = 0;
+            conflictes_neg[i] = 0;
+        }
     }
-    if(lit>0) conflictes_pos[lit]+=15;
-    else conflictes_neg[-lit]+=15;
+    if(lit>0) conflictes_pos[lit]+=positius[lit].size();
+    else conflictes_neg[-lit]+=negatius[-lit].size();
 }
 
 void readClauses( ){
@@ -94,7 +98,8 @@ bool propagateGivesConflict ( ) {
             for (uint i = 0; i < negatius[ultim].size(); ++i) {
                 int cl = negatius[ultim][i];
                 bool someLitTrue = false;
-                int numUndefs = lastLitUndef = 0;
+                int numUndefs = 0;
+                int lastLitUndef = 0;
                 
                 for (uint k = 0; not someLitTrue and k < clauses[cl].size(); ++k){
                     int val = currentValueInModel(clauses[cl][k]);
@@ -111,7 +116,8 @@ bool propagateGivesConflict ( ) {
             for (uint i = 0; i < positius[-ultim].size(); ++i) {
                 int cl = positius[-ultim][i];
                 bool someLitTrue = false;
-                int numUndefs = lastLitUndef = 0;
+                int numUndefs = 0;
+                int lastLitUndef = 0;
                 for (uint k = 0; not someLitTrue and k < clauses[cl].size(); ++k){
                     int val = currentValueInModel(clauses[cl][k]);
                     if (val == TRUE) someLitTrue = true;
@@ -154,16 +160,15 @@ int getNextDecisionLiteral(){
     
     for (uint i = 0; i < model.size(); ++i){
         if (i!=0 and model[i] == UNDEF){
-            if(conflictes_neg[i]>max){ max = conflictes_neg[i]; lit = i;}
-            if(conflictes_pos[i]>max){ max = conflictes_pos[i]; lit = -i;}
-            //int t = positius[i].size() + negatius[i].size();
-            //if(t>max){  max = t;    lit = i;    }
+            int n = conflictes_neg[i] + positius[i].size()+ negatius[i].size();
+            if(n>max){ 
+                max = conflictes_neg[i]; lit = i;}
+            n = conflictes_pos[i] + positius[i].size()+ negatius[i].size();
+            if(n>max){ 
+                max = n; lit = -i;}
         }
     }
     return lit;
-    //if( positius[lit].size()  > negatius[lit].size()) return lit; //si esta mes cops positiva
-    else    return -lit; //si esta mes cops negativa
-    return 0; // reurns 0 when all literals are defined
 }
 
 void checkmodel(){
