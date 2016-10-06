@@ -22,13 +22,21 @@ uint decisionLevel;
 vector<vector<uint> > positius; //clausules on apareix positiu
 vector<vector<uint> > negatius; //clausules on apareix negatiu
 
-
+vector<uint> conflictes_neg;
+vector<uint> conflictes_pos; 
+uint conflictes;
 
 
 int start_s;
 int stop_s;
 
-
+void conflictes_max(int lit){
+    if(30000<=conflictes){
+        conflictes=0;
+    }
+    if(lit>0) conflictes_pos[lit]+=15;
+    else conflictes_neg[-lit]+=15;
+}
 
 void readClauses( ){
     // Skip comments
@@ -44,6 +52,10 @@ void readClauses( ){
     
     positius.resize(numVars+1); //la posició 0 és inútil
     negatius.resize(numVars+1); //la posició 0 és inútil
+    
+    conflictes=0;
+    conflictes_pos.resize(numVars+1,0);
+    conflictes_neg.resize(numVars+1,0);
 
     // Read clauses
     for (uint i = 0; i < numClauses; ++i) {
@@ -90,6 +102,7 @@ bool propagateGivesConflict ( ) {
                     else if (val == UNDEF){     ++numUndefs;    lastLitUndef = clauses[cl][k]; }
                 }
                 if (not someLitTrue and numUndefs == 0){
+                    conflictes_max(ultim);
                     return true;} // conflict! all lits false
                 else if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);	
             }
@@ -105,7 +118,7 @@ bool propagateGivesConflict ( ) {
                     else if (val == UNDEF){     ++numUndefs;    lastLitUndef = clauses[cl][k]; }
                 }
                 if (not someLitTrue and numUndefs == 0){
-
+                    conflictes_max(ultim);
                     return true;} // conflict! all lits false
                 else if (not someLitTrue and numUndefs == 1) setLiteralToTrue(lastLitUndef);	
             }
@@ -141,12 +154,14 @@ int getNextDecisionLiteral(){
     
     for (uint i = 0; i < model.size(); ++i){
         if (i!=0 and model[i] == UNDEF){
-            int t = positius[i].size() + negatius[i].size();
-            if(t>max){  max = t;    lit = i;    }
+            if(conflictes_neg[i]>max){ max = conflictes_neg[i]; lit = i;}
+            if(conflictes_pos[i]>max){ max = conflictes_pos[i]; lit = -i;}
+            //int t = positius[i].size() + negatius[i].size();
+            //if(t>max){  max = t;    lit = i;    }
         }
     }
-    
-    if( positius[lit].size()  > negatius[lit].size()) return lit; //si esta mes cops positiva
+    return lit;
+    //if( positius[lit].size()  > negatius[lit].size()) return lit; //si esta mes cops positiva
     else    return -lit; //si esta mes cops negativa
     return 0; // reurns 0 when all literals are defined
 }
